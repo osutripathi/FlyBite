@@ -12,6 +12,7 @@ def logfile_setup() -> str:
 
     return path.join("logs", filename)
 
+
 def logger_setup() -> logging.Logger:
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger()
@@ -27,15 +28,10 @@ def logger_setup() -> logging.Logger:
 
 
 def main() -> None:
-    logging.info("Commencing test flight...")
-    
     drone = basic_path.Drone()
 
-    drone.fly_to_location(100, 0)
-    drone.fly_to_location(100, 100)
-    drone.fly_to_location(0, 100)
-    drone.fly_to_location(0, 0)
-
+    logging.info("Commencing test flight...")
+    drone.fly_square_path()
     logging.info("Test flight ended.")
 
     sys.exit(0)
