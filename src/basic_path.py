@@ -1,4 +1,5 @@
 import logging, math
+from time import sleep
 from djitellopy import Tello
 
 
@@ -14,6 +15,8 @@ class Drone:
         self.flying = False
         self.location = [0, 0, 0]   #Change location to a map
         self.orientation = 0
+
+        self.drone.connect()
     
     def validate_location(self, x: int, y: int) -> bool:
         """Validate that target location is within BOUNDS"""
@@ -21,14 +24,35 @@ class Drone:
         logging.info(f"Validating target location is within bounds [{self.BOUNDS[0]}, {self.BOUNDS[1]}]")
 
         valid = x >= 0 and y >= 0
-        valid = x <= self.BOUNDS[0] and y <= self.BOUNDS[1]
+        valid &= (x <= self.BOUNDS[0] and y <= self.BOUNDS[1])
 
         return valid
 
+    def initiate_flight(self) -> None:
+        assert not self.flying, "ERROR - BAD_COMMAND: Attempting to takeoff when drone already in flight"
+
+        logging.info("Initiating takeoff...")
+
+        self.drone.takeoff()
+        self.flying = True
+
+        logging.info("Takeoff completed.")
+    
+    def finish_flight(self) -> None:
+        assert self.flying, "ERROR - BAD_COMMAND: Attempting to land while drone already grounded"
+
+        logging.info("Initiating landing...")
+
+        self.drone.land()
+        self.flying = False
+
+        logging.info("Landing completed.")
+
     def fly_to_location(self, x: int, y: int) -> None:
         """Make drone fly from current location to target location"""
-        assert self.validate_location(x, y)
-        assert x != self.location[0] and y != self.location[1]
+
+        assert self.validate_location(x, y), "ERROR - BAD_COMMAND: Improper location coordinates supplied"
+        assert x != self.location[0] and y != self.location[1], "ERROR - BAD_COMMAND: Drone already at target location"
 
         if not self.flying:
             logging.info("Drone not in flight, commencing takeoff...")
@@ -45,7 +69,7 @@ class Drone:
         distance = math.sqrt(math.pow(delta_x, 2) + math.pow(delta_y, 2))
 
         logging.info(f"Current location [{self.location[0]}, {self.location[1]}] facing {self.orientation} degrees")
-        logging.info(f"Need to face {theta} degrees and fly {distance} cm")
+        logging.info(f"Need to face {theta} degrees and fly {distance} centimeters")
 
         #Turn and move
         delta_theta = int(self.orientation - theta)
@@ -56,7 +80,7 @@ class Drone:
             delta_theta *= -1
             logging.info(f"Rotating counter-clockwise {delta_theta} degrees...")
             self.drone.rotate_counter_clockwise(delta_theta)
-        logging.info(f"Moving forward {distance} cm...")
+        logging.info(f"Moving forward {distance} centimeters...")
         self.drone.move_forward(distance)
 
         self.location[0] = x
@@ -64,3 +88,17 @@ class Drone:
         self.orientation = theta
 
         logging.info(f"Location updated to [{self.location[0]}, {self.location[1]}] facing {self.orientation} degrees")
+    
+    def pit_stop(self, duration: int) -> None:
+        assert self.flying, "ERROR - BAD_COMMAND: Attempting to land while drone already grounded"
+
+        logging.info(f"Commencing pit stop for {duration} seconds...")
+
+        self.drone.land()
+        self.flying = False
+
+        sleep(duration)
+        logging.info("Pit stop finished. Commencing takeoff...")
+
+        self.drone.takeoff()
+        self.flying = True
