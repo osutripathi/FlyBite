@@ -9,7 +9,7 @@ class Drone:
     # Represents the m x n grid that the drone is capable of flying within. Starts at origin.
     BOUNDS = [100, 100]
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.drone = Tello()
 
         self.flying = False
@@ -17,6 +17,11 @@ class Drone:
         self.orientation = 0
 
         self.drone.connect()
+
+    def get_battery_charge(self) -> None:
+        """Return string of battery percentage"""
+
+        return str(self.drone.get_battery())
 
     def validate_location(self, x: int, y: int) -> bool:
         """Validate that target location is within BOUNDS"""

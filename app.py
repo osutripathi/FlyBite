@@ -31,6 +31,7 @@ def main() -> None:
     drone = basic_path.Drone()
 
     logging.info("Commencing test flight...")
+    logging.info(f"Drone Battery Percentage: {drone.get_battery_charge()}")
     drone.fly_square_path()
     logging.info("Test flight ended.")
 
